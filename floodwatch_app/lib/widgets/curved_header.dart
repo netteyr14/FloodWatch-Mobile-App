@@ -62,8 +62,8 @@ class CurvedHeader extends StatelessWidget {
     // Text/icon colors per mode.
     final Color textColor = isDark ? Colors.white : Colors.black87;
     final Color subTextColor = isDark ? Colors.white70 : Colors.black54;
-    final Color iconBg =
-        isDark ? Colors.white.withOpacity(0.08) : Colors.black.withOpacity(0.08);
+    // final Color iconBg =
+    //     isDark ? Colors.white.withOpacity(0.08) : Colors.black.withOpacity(0.08);
 
     // Vignette/bubbles tint
     final Color bubbleColor =

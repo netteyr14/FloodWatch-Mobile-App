@@ -537,8 +537,8 @@ class _EnvironmentStatusSection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
-    final isDark = Theme.of(context).brightness == Brightness.dark;
+    // final scheme = Theme.of(context).colorScheme;
+    // final isDark = Theme.of(context).brightness == Brightness.dark;
 
     String tempText = '--';
     String humText = '--';
