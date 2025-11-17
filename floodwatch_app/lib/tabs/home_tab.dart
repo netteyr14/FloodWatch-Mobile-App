@@ -10,6 +10,8 @@ import '../widgets/action_button.dart';
 import '../widgets/risk_gauge.dart';
 import '../screens/sign_in_screen.dart';
 import '../screens/register_screen.dart';
+import 'dart:async';
+
 
 /// Your backend URL (no trailing slash)
 const String _apiBaseUrl = 'https://8cf42521409e.ngrok-free.app';
@@ -36,11 +38,60 @@ class _HomeTabState extends State<HomeTab> {
   double? _predictedTemp;
   DateTime? _predictedAt;
 
+  Timer? _pollTimer;
+
   @override
-  void initState() {
-    super.initState();
-    _fetchNodes();
+void initState() {
+  super.initState();
+  _fetchNodes(); // initial load
+
+  //repeat refresh every 15 seconds (adjust if you like)
+  _pollTimer = Timer.periodic(const Duration(seconds: 15), (_) {
+    _refreshNodesSilently();
+  });
+}
+
+Future<void> _refreshNodesSilently() async {
+  try {
+    final uri = Uri.parse('$_apiBaseUrl/node/locations');
+    final res = await http.get(uri);
+
+    if (res.statusCode != 200) return; // just ignore failures silently
+
+    final decoded = json.decode(res.body) as Map<String, dynamic>;
+    final list = (decoded['nodes'] as List<dynamic>)
+        .map((e) => NodeLocation.fromJson(e as Map<String, dynamic>))
+        .toList();
+
+    if (list.isEmpty) return;
+
+    setState(() {
+      _nodes = list;
+
+      // keep same selected node if it still exists
+      if (_selected != null) {
+        final match = list.firstWhere(
+          (n) => n.nodeId == _selected!.nodeId,
+          orElse: () => list.first,
+        );
+        _selected = match;
+      } else {
+        _selected = list.first;
+      }
+    });
+
+    // also refresh prediction for current node
+    await _fetchPredictionForSelected();
+  } catch (_) {
+    // ignore errors for silent refresh
   }
+}
+
+@override
+void dispose() {
+  _pollTimer?.cancel(); // 👈 important so it stops when tab is gone
+  super.dispose();
+}
 
   Future<void> _fetchNodes() async {
     setState(() {
@@ -394,8 +445,8 @@ class _ForecastSection extends StatelessWidget {
                         const EdgeInsets.symmetric(horizontal: 4, vertical: 4),
                     padding: const EdgeInsets.all(12),
                     decoration: BoxDecoration(
-                      color: scheme.secondaryContainer.withOpacity(
-                        isDark ? 0.22 : 0.12,
+                      color: scheme.primary.withOpacity(
+                        isDark ? 0.16 : 0.06,
                       ),
                       borderRadius: BorderRadius.circular(16),
                     ),
