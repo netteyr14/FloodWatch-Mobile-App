@@ -14,7 +14,7 @@ import 'dart:async';
 
 
 /// Your backend URL (no trailing slash)
-const String _apiBaseUrl = 'http://192.168.1.2:8080';
+const String _apiBaseUrl = 'https://d14095196513.ngrok-free.app';
 
 class HomeTab extends StatefulWidget {
   final bool isGuest;

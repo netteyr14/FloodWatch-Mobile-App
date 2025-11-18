@@ -3,6 +3,8 @@ import 'package:flutter/material.dart';
 import '../widgets/curved_header.dart';
 import '../app_theme.dart';
 import '../models/admin_session.dart';
+import 'package:window_manager/window_manager.dart';
+import 'package:floodwatch_desktop/controllers/window_sizes.dart'; // if you moved the constants
 
 class ProfileScreen extends StatelessWidget {
   const ProfileScreen({super.key});
@@ -117,13 +119,22 @@ class ProfileScreen extends StatelessWidget {
                 // LOGOUT
                 Center(
                   child: TextButton.icon(
-                    onPressed: () {
-                      AdminSession.clear(); // clear current admin
-                      Navigator.of(context).pushNamedAndRemoveUntil(
-                        '/login',
-                        (route) => false,
-                      );
-                    },
+                    onPressed: () async {
+  AdminSession.clear();
+
+  // 🔹 Shrink back to login window size
+  await windowManager.setResizable(false);
+  await windowManager.setMinimumSize(loginWindowSize);
+  await windowManager.setSize(loginWindowSize);
+  await windowManager.center();
+
+  if (!context.mounted) return;
+  Navigator.of(context).pushNamedAndRemoveUntil(
+    '/login',
+    (route) => false,
+  );
+},
+
                     icon: const Icon(Icons.logout, color: Colors.red),
                     label: const Text(
                       "Logout",

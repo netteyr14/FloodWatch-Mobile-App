@@ -14,7 +14,7 @@ class DashboardShell extends StatefulWidget {
 
 class _DashboardShellState extends State<DashboardShell> {
   int index = 0;
-  bool _isSidebarCollapsed = false;
+  bool _isSidebarCollapsed = true;
 
   final screens = const [
     AdminDashboardScreen(),
