@@ -1,6 +1,10 @@
 // lib/screens/login_screen.dart
+import 'dart:convert';
 import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
+
 import 'dashboard_shell.dart';
+import '../models/admin_session.dart'; // <-- NEW
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -13,23 +17,60 @@ class _LoginScreenState extends State<LoginScreen> {
   final _formKey = GlobalKey<FormState>();
   final _usernameController = TextEditingController();
   final _passwordController = TextEditingController();
+
   String? _error;
+  bool _isLoading = false;
 
-  static const _allowedUsername = 'admin';
-  static const _allowedPassword = 'admin123';
+  static const String _baseUrl = 'http://192.168.1.2:8080';
 
-  void _handleLogin() {
+  Future<void> _handleLogin() async {
     if (!_formKey.currentState!.validate()) return;
 
-    if (_usernameController.text == _allowedUsername &&
-        _passwordController.text == _allowedPassword) {
-      Navigator.of(context).pushReplacement(
-        MaterialPageRoute(builder: (_) => const DashboardShell()),
+    setState(() {
+      _error = null;
+      _isLoading = true;
+    });
+
+    final username = _usernameController.text.trim();
+    final password = _passwordController.text.trim();
+
+    try {
+      final response = await http.post(
+        Uri.parse('$_baseUrl/node/login'),
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode({
+          'username': username,
+          'password': password,
+        }),
       );
-    } else {
+
+      final Map<String, dynamic> data = jsonDecode(response.body);
+
+      if (response.statusCode == 200 && data['success'] == true) {
+        // ---- SAVE CURRENT ADMIN ----
+        final admin = data['admin'] as Map<String, dynamic>;
+        AdminSession.fullname = admin['fullname']?.toString();
+        AdminSession.username = admin['uname']?.toString();
+
+        if (!mounted) return;
+        Navigator.of(context).pushReplacement(
+          MaterialPageRoute(builder: (_) => const DashboardShell()),
+        );
+      } else {
+        setState(() {
+          _error = data['message']?.toString() ?? 'Login failed.';
+        });
+      }
+    } catch (e) {
       setState(() {
-        _error = 'Invalid username or password';
+        _error = 'Cannot connect to server. Please try again.';
       });
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
+      }
     }
   }
 
@@ -96,18 +137,20 @@ class _LoginScreenState extends State<LoginScreen> {
                     ),
                     const SizedBox(height: 16),
                     if (_error != null)
-                      Text(
-                        _error!,
-                        style: const TextStyle(
-                          color: Colors.red,
-                          fontSize: 12,
+                      Padding(
+                        padding: const EdgeInsets.only(bottom: 8.0),
+                        child: Text(
+                          _error!,
+                          style: const TextStyle(
+                            color: Colors.red,
+                            fontSize: 12,
+                          ),
                         ),
                       ),
-                    const SizedBox(height: 8),
                     SizedBox(
                       width: double.infinity,
                       child: ElevatedButton(
-                        onPressed: _handleLogin,
+                        onPressed: _isLoading ? null : _handleLogin,
                         style: ElevatedButton.styleFrom(
                           padding: const EdgeInsets.symmetric(vertical: 14),
                           backgroundColor: const Color(0xFF7EA531),
@@ -116,17 +159,23 @@ class _LoginScreenState extends State<LoginScreen> {
                             borderRadius: BorderRadius.circular(12),
                           ),
                         ),
-                        child: const Text(
-                          'Login',
-                          style: TextStyle(
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
+                        child: _isLoading
+                            ? const SizedBox(
+                                height: 18,
+                                width: 18,
+                                child: CircularProgressIndicator(strokeWidth: 2),
+                              )
+                            : const Text(
+                                'Login',
+                                style: TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
                       ),
                     ),
                     const SizedBox(height: 8),
                     const Text(
-                      'Use admin / admin123',
+                      'Login with your admin account',
                       style: TextStyle(fontSize: 12, color: Colors.grey),
                     ),
                     const SizedBox(height: 8),

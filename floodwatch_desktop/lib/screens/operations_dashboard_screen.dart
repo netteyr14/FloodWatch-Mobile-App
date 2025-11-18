@@ -1,10 +1,16 @@
 // lib/screens/operations_dashboard_screen.dart
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
+import 'package:http/http.dart' as http;
 
 import '../widgets/curved_header.dart';
 import '../widgets/action_button.dart';
+
+/// Same backend + routes as other dashboards
+const String _apiBaseUrl = "http://192.168.1.2:8080";
 
 class OperationsDashboardScreen extends StatelessWidget {
   const OperationsDashboardScreen({super.key});
@@ -40,11 +46,57 @@ class OperationsDashboardScreen extends StatelessWidget {
 }
 
 /* ────────────────────────────────────────────────────────────────
-   MAP SECTION
+   MAP SECTION  (now dynamic: shows ALL nodes as markers)
 ──────────────────────────────────────────────────────────────── */
 
-class _MapSection extends StatelessWidget {
+class _MapSection extends StatefulWidget {
   const _MapSection();
+
+  @override
+  State<_MapSection> createState() => _MapSectionState();
+}
+
+class _MapSectionState extends State<_MapSection> {
+  bool _loading = true;
+  String? _error;
+  List<NodeLocation> _nodes = [];
+
+  @override
+  void initState() {
+    super.initState();
+    _fetchNodes();
+  }
+
+  Future<void> _fetchNodes() async {
+    setState(() {
+      _loading = true;
+      _error = null;
+    });
+
+    try {
+      final uri = Uri.parse("$_apiBaseUrl/node/locations");
+      final res = await http.get(uri);
+
+      if (res.statusCode != 200) {
+        throw Exception("Node API returned ${res.statusCode}");
+      }
+
+      final decoded = json.decode(res.body) as Map<String, dynamic>;
+      final list = (decoded["nodes"] as List<dynamic>)
+          .map((e) => NodeLocation.fromJson(e as Map<String, dynamic>))
+          .toList();
+
+      setState(() {
+        _nodes = list;
+        _loading = false;
+      });
+    } catch (e) {
+      setState(() {
+        _loading = false;
+        _error = e.toString();
+      });
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -64,37 +116,65 @@ class _MapSection extends StatelessWidget {
           height: 260,
           child: ClipRRect(
             borderRadius: BorderRadius.circular(16),
-            child: FlutterMap(
-              options: const MapOptions(
-                initialCenter: LatLng(14.739246233, 121.038324372),
-                initialZoom: 16,
-              ),
-              children: [
-                TileLayer(
-                  urlTemplate:
-                      'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
-                  subdomains: ['a', 'b', 'c'],
-                  userAgentPackageName: 'com.example.floodwatch_desktop',
-                ),
-                const MarkerLayer(
-                  markers: [
-                    Marker(
-                      point: LatLng(14.739246233, 121.038324372),
-                      width: 40,
-                      height: 40,
-                      child: Icon(
-                        Icons.location_on,
-                        size: 36,
-                        color: Colors.red,
-                      ),
-                    ),
-                  ],
-                ),
-              ],
-            ),
+            child: _buildMap(),
           ),
         ),
       ),
+    );
+  }
+
+  Widget _buildMap() {
+    if (_loading) {
+      return const Center(
+        child: CircularProgressIndicator(strokeWidth: 2),
+      );
+    }
+
+    if (_error != null) {
+      return Center(
+        child: Text(
+          'Failed to load node locations\n$_error',
+          textAlign: TextAlign.center,
+        ),
+      );
+    }
+
+    if (_nodes.isEmpty) {
+      return const Center(child: Text('No nodes available'));
+    }
+
+    // Center map on first node (you can change logic later if needed)
+    final first = _nodes.first;
+    final center = LatLng(first.lat, first.lng);
+
+    final markers = _nodes
+        .map(
+          (n) => Marker(
+            point: LatLng(n.lat, n.lng),
+            width: 40,
+            height: 40,
+            child: const Icon(
+              Icons.location_on,
+              size: 36,
+              color: Colors.red,
+            ),
+          ),
+        )
+        .toList();
+
+    return FlutterMap(
+      options: MapOptions(
+        initialCenter: center,
+        initialZoom: 16,
+      ),
+      children: [
+        TileLayer(
+          urlTemplate: 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
+          subdomains: const ['a', 'b', 'c'],
+          userAgentPackageName: 'com.example.floodwatch_desktop',
+        ),
+        MarkerLayer(markers: markers),
+      ],
     );
   }
 }
@@ -146,11 +226,11 @@ class _NodesManagementSection extends StatelessWidget {
                       color: innerCardColor,
                       borderRadius: BorderRadius.circular(16),
                     ),
-                    child: Padding(
-                      padding: const EdgeInsets.all(10.0),
+                    child: const Padding(
+                      padding: EdgeInsets.all(10.0),
                       child: Row(
                         crossAxisAlignment: CrossAxisAlignment.start,
-                        children: const [
+                        children: [
                           Text(
                             'Total No. of Nodes:',
                             style: TextStyle(
@@ -431,4 +511,40 @@ class ResidentsTableSource extends DataTableSource {
 
   @override
   int get selectedRowCount => 0;
+}
+
+/* ────────────────────────────────────────────────────────────────
+   NODE MODEL (for map section)
+──────────────────────────────────────────────────────────────── */
+
+class NodeLocation {
+  final int nodeId;
+  final String nodeName;
+  final int siteId;
+  final String siteName;
+  final double lat;
+  final double lng;
+
+  NodeLocation({
+    required this.nodeId,
+    required this.nodeName,
+    required this.siteId,
+    required this.siteName,
+    required this.lat,
+    required this.lng,
+  });
+
+  factory NodeLocation.fromJson(Map<String, dynamic> json) {
+    double _d(dynamic v) =>
+        v == null ? 0.0 : (v is num ? v.toDouble() : double.tryParse('$v') ?? 0.0);
+
+    return NodeLocation(
+      nodeId: json['node_id'] ?? 0,
+      nodeName: json['node_name'] ?? '',
+      siteId: json['site_id'] ?? 0,
+      siteName: json['site_name'] ?? '',
+      lat: _d(json['latitude']),
+      lng: _d(json['longitude']),
+    );
+  }
 }

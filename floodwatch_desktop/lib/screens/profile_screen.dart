@@ -2,14 +2,22 @@
 import 'package:flutter/material.dart';
 import '../widgets/curved_header.dart';
 import '../app_theme.dart';
+import '../models/admin_session.dart';
 
 class ProfileScreen extends StatelessWidget {
   const ProfileScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
-    const placeholderName = "Admin";
     final isDark = ThemeController.themeMode.value == ThemeMode.dark;
+
+    // fullname → username → "Admin"
+    final displayName =
+        AdminSession.fullname?.isNotEmpty == true
+            ? AdminSession.fullname!
+            : (AdminSession.username?.isNotEmpty == true
+                ? AdminSession.username!
+                : "Admin");
 
     return Column(
       children: [
@@ -44,24 +52,27 @@ class ProfileScreen extends StatelessWidget {
                     children: [
                       CircleAvatar(
                         radius: 32,
-                        backgroundColor: Theme.of(context).colorScheme.primaryContainer,
-                        child: Icon(Icons.person,
-                            size: 40,
-                            color: Theme.of(context).iconTheme.color),
+                        backgroundColor:
+                            Theme.of(context).colorScheme.primaryContainer,
+                        child: Icon(
+                          Icons.person,
+                          size: 40,
+                          color: Theme.of(context).iconTheme.color,
+                        ),
                       ),
                       const SizedBox(width: 18),
                       Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
-                        children: const [
+                        children: [
                           Text(
-                            placeholderName,
-                            style: TextStyle(
+                            displayName,
+                            style: const TextStyle(
                               fontSize: 22,
                               fontWeight: FontWeight.w700,
                             ),
                           ),
-                          SizedBox(height: 4),
-                          Text(
+                          const SizedBox(height: 4),
+                          const Text(
                             "Administrator",
                             style: TextStyle(
                               fontSize: 14,
@@ -85,10 +96,10 @@ class ProfileScreen extends StatelessWidget {
                 ),
                 const SizedBox(height: 10),
 
-                const _SettingItem(title: "Account Details", icon: Icons.person_outline),
+                // const _SettingItem(title: "Account Details", icon: Icons.person_outline),
                 const _SettingItem(title: "Change Password", icon: Icons.lock_outline),
-                const _SettingItem(title: "Appearance", icon: Icons.palette_outlined),
-                const _SettingItem(title: "Notifications", icon: Icons.notifications_outlined),
+                // const _SettingItem(title: "Appearance", icon: Icons.palette_outlined),
+                // const _SettingItem(title: "Notifications", icon: Icons.notifications_outlined),
                 const _SettingItem(title: "Help & Support", icon: Icons.help_outline),
 
                 // DARK MODE TOGGLE
@@ -107,8 +118,9 @@ class ProfileScreen extends StatelessWidget {
                 Center(
                   child: TextButton.icon(
                     onPressed: () {
+                      AdminSession.clear(); // clear current admin
                       Navigator.of(context).pushNamedAndRemoveUntil(
-                        '/login', // <-- Make sure this matches your route name
+                        '/login',
                         (route) => false,
                       );
                     },

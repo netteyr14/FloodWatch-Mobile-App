@@ -14,7 +14,7 @@ import 'dart:async';
 
 
 /// Your backend URL (no trailing slash)
-const String _apiBaseUrl = 'https://8cf42521409e.ngrok-free.app';
+const String _apiBaseUrl = 'http://192.168.1.2:8080';
 
 class HomeTab extends StatefulWidget {
   final bool isGuest;
@@ -671,7 +671,7 @@ class _EnvMetric extends StatelessWidget {
 }
 
 /// ─────────────────────────────────────────────────────────────────────────
-/// MAP PREVIEW (NO MapController, stateless, uses key to recenter)
+/// MAP PREVIEW — single marker, focuses on selected node
 /// ─────────────────────────────────────────────────────────────────────────
 class _MapPreview extends StatelessWidget {
   final List<NodeLocation> nodes;
@@ -839,39 +839,44 @@ class _MapPreview extends StatelessWidget {
       return const Center(child: Text('No nodes available'));
     }
 
+    // Center on the selected node
     final center = latlng.LatLng(selected!.lat, selected!.lng);
 
-    final markers = nodes
-        .map(
-          (n) => Marker(
-            point: latlng.LatLng(n.lat, n.lng),
-            width: 40,
-            height: 40,
-            child: const Icon(
-              Icons.location_pin,
-              size: 32,
-              color: Colors.redAccent,
-            ),
-          ),
-        )
-        .toList();
-
     return FlutterMap(
-      key: ValueKey('map-${selected!.nodeId}'),
+      // 🔹 This key forces the map to fully rebuild whenever selected changes,
+      //     which recenters the camera (same trick as AdminDashboardScreen).
+      key: ValueKey(
+        'home-map-${selected!.nodeId}_${selected!.lat}_${selected!.lng}',
+      ),
       options: MapOptions(
         initialCenter: center,
-        initialZoom: 17,
+        initialZoom: 16,
       ),
       children: [
         TileLayer(
           urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
           userAgentPackageName: 'com.example.floodwatch',
         ),
-        MarkerLayer(markers: markers),
+        // 🔹 Only one marker: the selected node
+        MarkerLayer(
+          markers: [
+            Marker(
+              point: center,
+              width: 40,
+              height: 40,
+              child: const Icon(
+                Icons.location_on,
+                size: 36,
+                color: Colors.red,
+              ),
+            ),
+          ],
+        ),
       ],
     );
   }
 }
+
 
 /// Model: node + latest temp/humidity (optional, nullable)
 class NodeLocation {
