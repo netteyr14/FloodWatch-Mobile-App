@@ -22,7 +22,7 @@ class _LoginScreenState extends State<LoginScreen> {
   String? _error;
   bool _isLoading = false;
 
-  static const String _baseUrl = 'http://192.168.0.100:8080';
+  static const String _baseUrl = 'http://192.168.1.2:8080';
 
   Future<void> _handleLogin() async {
     if (!_formKey.currentState!.validate()) return;

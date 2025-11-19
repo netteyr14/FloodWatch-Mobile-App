@@ -11,7 +11,7 @@ import '../widgets/curved_header.dart';
 import '../widgets/metric_card.dart';
 
 /// Backend base URL
-const String _apiBaseUrl = "http://192.168.0.100:8080";
+const String _apiBaseUrl = "http://192.168.1.2:8080";
 
 class AdminDashboardScreen extends StatefulWidget {
   const AdminDashboardScreen({super.key});
