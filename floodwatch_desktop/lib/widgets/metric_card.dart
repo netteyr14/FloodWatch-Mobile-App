@@ -61,7 +61,7 @@ class MetricCard extends StatelessWidget {
                 CircleAvatar(
                   radius: 18,
                   backgroundColor:
-                      scheme.primary.withOpacity(isDark ? 0.25 : 0.20),
+                      scheme.primary.withValues(alpha: isDark ? 0.25 : 0.20),
                   child: Icon(icon, color: scheme.primary),
                 ),
                 const Spacer(),
@@ -72,7 +72,7 @@ class MetricCard extends StatelessWidget {
                       vertical: 6,
                     ),
                     decoration: BoxDecoration(
-                      color: chipColor.withOpacity(.15),
+                      color: chipColor.withValues(alpha: 0.15),
                       borderRadius: BorderRadius.circular(20),
                     ),
                     child: Row(
@@ -84,7 +84,7 @@ class MetricCard extends StatelessWidget {
                         ),
                         const SizedBox(width: 4),
                         Text(
-                          '${(trend!.abs() * 100).toStringAsFixed(0)}%',
+                          '${(trend.abs() * 100).toStringAsFixed(0)}%',
                           style: TextStyle(
                             color: chipColor,
                             fontWeight: FontWeight.w700,
@@ -101,7 +101,7 @@ class MetricCard extends StatelessWidget {
             Text(
               title,
               style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                    color: scheme.onSurface.withOpacity(
+                    color: scheme.onSurface.withValues(alpha: 
                         isDark ? 0.7 : 0.55),
                   ),
             ),

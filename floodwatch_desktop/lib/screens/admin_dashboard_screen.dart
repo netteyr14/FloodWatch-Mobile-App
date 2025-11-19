@@ -11,7 +11,7 @@ import '../widgets/curved_header.dart';
 import '../widgets/metric_card.dart';
 
 /// Backend base URL
-const String _apiBaseUrl = "http://192.168.1.2:8080";
+const String _apiBaseUrl = "http://192.168.0.100:8080";
 
 class AdminDashboardScreen extends StatefulWidget {
   const AdminDashboardScreen({super.key});
@@ -203,6 +203,21 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
     double? forecast1h = _forecastValue;
     double? forecast1m = _forecastValue;
 
+    // 🔹 Use loading + error flags so they aren’t “unused”
+    if (_loadingNodes) {
+      return const Center(child: CircularProgressIndicator());
+    }
+
+    if (_nodeError != null) {
+      return Center(
+        child: Text(
+          'Failed to load nodes:\n$_nodeError',
+          textAlign: TextAlign.center,
+          style: const TextStyle(color: Colors.red),
+        ),
+      );
+    }
+
     return Column(
       children: [
         const CurvedHeader(
@@ -259,6 +274,22 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
       title: "Water Level Overview",
       child: Row(
         children: [
+          if (_loadingForecast)
+            const Padding(
+              padding: EdgeInsets.only(top: 8),
+              child: Text(
+                'Updating forecast…',
+                style: TextStyle(fontSize: 12, color: Colors.grey),
+              ),
+            )
+          else if (_forecastError != null)
+            Padding(
+              padding: const EdgeInsets.only(top: 8),
+              child: Text(
+                _forecastError!,
+                style: const TextStyle(fontSize: 12, color: Colors.red),
+              ),
+            ),
           Expanded(
             child: MetricCard(
               title: "Current Water Level",

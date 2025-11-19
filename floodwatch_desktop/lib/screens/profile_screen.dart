@@ -120,21 +120,20 @@ class ProfileScreen extends StatelessWidget {
                 Center(
                   child: TextButton.icon(
                     onPressed: () async {
-  AdminSession.clear();
+                      AdminSession.clear();
 
-  // 🔹 Shrink back to login window size
-  await windowManager.setResizable(false);
-  await windowManager.setMinimumSize(loginWindowSize);
-  await windowManager.setSize(loginWindowSize);
-  await windowManager.center();
+                      // 🔹 Shrink back to login window size
+                      await windowManager.setResizable(false);
+                      await windowManager.setMinimumSize(loginWindowSize);
+                      await windowManager.setSize(loginWindowSize);
+                      await windowManager.center();
 
-  if (!context.mounted) return;
-  Navigator.of(context).pushNamedAndRemoveUntil(
-    '/login',
-    (route) => false,
-  );
-},
-
+                      if (!context.mounted) return;
+                      Navigator.of(context).pushNamedAndRemoveUntil(
+                        '/login',
+                        (route) => false,
+                      );
+                    },
                     icon: const Icon(Icons.logout, color: Colors.red),
                     label: const Text(
                       "Logout",
