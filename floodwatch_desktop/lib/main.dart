@@ -1,8 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:window_manager/window_manager.dart';
-
 import 'screens/login_screen.dart';
-import 'app_theme.dart';
+import 'theme/app_theme.dart';
 import 'package:floodwatch_desktop/controllers/window_sizes.dart'; // if you moved the constants
 
 Future<void> main() async {

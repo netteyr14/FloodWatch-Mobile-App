@@ -1,10 +1,10 @@
 // lib/screens/profile_screen.dart
 import 'package:flutter/material.dart';
 import '../widgets/curved_header.dart';
-import '../app_theme.dart';
+import '../theme/app_theme.dart';
 import '../models/admin_session.dart';
 import 'package:window_manager/window_manager.dart';
-import 'package:floodwatch_desktop/controllers/window_sizes.dart'; // if you moved the constants
+import 'package:floodwatch_desktop/controllers/window_sizes.dart';
 
 class ProfileScreen extends StatelessWidget {
   const ProfileScreen({super.key});
