@@ -130,14 +130,14 @@ class _LoginScreenState extends State<LoginScreen> {
           decoration: BoxDecoration(
             color: cardColor,
             borderRadius: BorderRadius.circular(24),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withOpacity(0.22),
-                blurRadius: 32,
-                spreadRadius: 2,
-                offset: const Offset(0, 14),
-              ),
-            ],
+            // boxShadow: [
+            //   BoxShadow(
+            //     color: Colors.black.withOpacity(0.22),
+            //     blurRadius: 32,
+            //     spreadRadius: 2,
+            //     offset: const Offset(5, 14),
+            //   ),
+            // ],
           ),
           child: Column(
             children: [
